@@ -15,9 +15,12 @@ export default function Projects() {
       <SectionHeading label="Selected work" title="Featured projects" />
 
       <div className="space-y-12">
-        {featured.map((p) => (
+        {featured.map((p, i) => (
           <article key={p.title}>
             <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+              <span className="font-mono text-xs text-accent" aria-hidden="true">
+                {String(i + 1).padStart(2, "0")}
+              </span>
               <h3 className="text-lg font-semibold tracking-tight">{p.title}</h3>
               <span className="text-sm text-muted">— {p.tagline}</span>
             </div>
@@ -47,8 +50,8 @@ export default function Projects() {
 
             <div className="mt-4 flex flex-wrap items-center gap-4 text-sm">
               {p.role && (
-                <span className="text-muted">
-                  Role: <span className="text-fg/80">{p.role}</span>
+                <span className="font-mono text-xs lowercase text-muted">
+                  {p.role}
                 </span>
               )}
               {p.links?.map((l) => (

@@ -34,15 +34,15 @@ export const profile: Profile = {
 
 export const howIBuild: { title: string; body: string }[] = [
   {
-    title: "AI-augmented by default.",
+    title: "AI-augmented by default",
     body: "Claude Code with multi-agent workflows is my daily driver — planning, scaffolding, test generation, refactors.",
   },
   {
-    title: "Human-owned quality.",
+    title: "Human-owned quality",
     body: "I review every agent diff, own the architecture decisions, and verify end to end before anything ships. Speed never outruns quality.",
   },
   {
-    title: "LLMs in production, not demos.",
+    title: "LLMs in production, not demos",
     body: "WhatsApp agents qualifying real leads with closed-loop ad attribution, LLM ad-campaign generation, AI document extraction — running for paying customers.",
   },
 ];

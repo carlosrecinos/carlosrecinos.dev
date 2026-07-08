@@ -37,9 +37,19 @@ export default function Contact() {
         </a>
       </div>
 
-      <footer className="mt-20 border-t border-border pt-6 font-mono text-xs text-muted">
-        © {profile.name} · Built with React, Vite &amp; Tailwind · Reviewed,
-        tested, and shipped by hand.
+      <footer className="mt-20 flex flex-wrap items-center justify-between gap-2 border-t border-border pt-6 font-mono text-xs text-muted">
+        <span>
+          © {profile.name} · Built with React, Vite &amp; Tailwind · Reviewed,
+          tested, and shipped by hand.
+        </span>
+        <a
+          href="https://github.com/carlosrecinos/carlosrecinos.dev"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="transition-colors hover:text-accent"
+        >
+          View source ↗
+        </a>
       </footer>
     </section>
   );

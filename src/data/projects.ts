@@ -95,6 +95,12 @@ export const featured: FeaturedProject[] = [
 
 export const more: MoreProject[] = [
   {
+    title: "Edulink",
+    description:
+      "Learning platform for an English school — Stripe recurring billing + Moodle LMS integration",
+    stack: ["typescript", "prisma", "stripe", "docker"],
+  },
+  {
     title: "RadarMédico",
     description: "Clinic management SaaS",
     stack: ["react", "node"],

@@ -6,7 +6,7 @@ export default function Contact() {
     <section id="contact" className="scroll-mt-20 border-t border-border py-16">
       <SectionHeading label="Contact" title="Let's talk" />
       <p className="max-w-2xl text-[0.975rem] leading-relaxed text-fg/85">
-        Open to senior remote roles (full-time or contract) — full-stack,
+        Open to senior remote roles, full-time or contract, in full-stack,
         mobile, or applied AI.
       </p>
 
@@ -38,10 +38,7 @@ export default function Contact() {
       </div>
 
       <footer className="mt-20 flex flex-wrap items-center justify-between gap-2 border-t border-border pt-6 font-mono text-xs text-muted">
-        <span>
-          © {profile.name} · Built with React, Vite &amp; Tailwind · Reviewed,
-          tested, and shipped by hand.
-        </span>
+        <span>© {profile.name}</span>
         <a
           href="https://github.com/carlosrecinos/carlosrecinos.dev"
           target="_blank"

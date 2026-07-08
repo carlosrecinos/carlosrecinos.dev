@@ -5,7 +5,7 @@ export default function Hero() {
     <section id="top" className="relative scroll-mt-20 pt-20 pb-16 sm:pt-28">
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute -inset-x-24 -top-24 h-[26rem] bg-[radial-gradient(38rem_circle_at_75%_25%,color-mix(in_oklab,var(--accent)_9%,transparent),transparent_70%)]"
+        className="pointer-events-none absolute -inset-x-32 -top-16 h-[30rem] bg-[radial-gradient(ellipse_40%_55%_at_70%_40%,color-mix(in_oklab,var(--accent)_9%,transparent),transparent_70%)]"
       />
       <a
         href="#contact"
@@ -30,7 +30,17 @@ export default function Hero() {
         {profile.intro}
       </p>
 
-      <p className="mt-6 font-mono text-xs text-muted">{profile.location}</p>
+      <p className="mt-6 flex items-center gap-2 font-mono text-xs text-muted">
+        <svg
+          aria-hidden="true"
+          viewBox="0 0 18 12"
+          className="h-3 w-[1.125rem] shrink-0 rounded-[2px] ring-1 ring-border"
+        >
+          <rect width="18" height="12" fill="#0f47af" />
+          <rect y="4" width="18" height="4" fill="#ffffff" />
+        </svg>
+        {profile.location}
+      </p>
 
       <div className="mt-8 flex flex-wrap items-center gap-3 text-sm">
         <a

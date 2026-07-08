@@ -8,8 +8,9 @@ import { useEffect, useRef } from "react";
  * Work items start gray and pick up color as they mature through each gate,
  * reaching full accent green in production. Items rejected at review, CI/CD,
  * or QA return to plan (yellow, along the lower arc) and re-enter the flow.
- * Production stacks every shipped item into a chip; when the chip completes,
- * the version ships and the board clears for the next build.
+ * QA/staging stacks every item that clears the gates into a chip; once full,
+ * the whole batch ships to production and fades out, then staging starts
+ * collecting the next build.
  *
  * Colors come from the site's CSS variables so the canvas follows the theme.
  * The loop pauses off-screen and falls back to a static frame when the user
@@ -24,7 +25,7 @@ const MAX_PARTICLES = 18;
 const CHIP = 36;
 const GRID = 4;
 const TARGET = GRID * GRID;
-const CELEBRATE_MS = 1700;
+const SHIP_MS = 1300;
 
 interface Point {
   x: number;
@@ -201,9 +202,9 @@ export default function PipelineCanvas() {
     let geometry: Geometry | null = null;
     let particles: Particle[] = [];
     const pulses: Record<string, { v: number; color: string }> = {};
-    let totalBuilt = 0;
-    let celebrateUntil = 0;
-    let celebratedVersion = 0;
+    let chipCount = 0;
+    let shipAnim: { start: number; version: number } | null = null;
+    let version = 0;
     let raf = 0;
     let running = false;
     let lastSpawn = 0;
@@ -326,13 +327,12 @@ export default function PipelineCanvas() {
       ctx.globalAlpha = 1;
     };
 
-    const drawChip = (g: Geometry) => {
-      const { x, y } = g.prod;
+    /** the forming batch: stacks blocks at QA/staging as items clear the gate */
+    const drawStagingChip = (g: Geometry, label: string) => {
+      const { x, y } = g.staging;
       const half = CHIP / 2;
-      const celebrating = now < celebrateUntil;
-      const fill = celebrating ? TARGET : totalBuilt % TARGET;
 
-      const pu = pulses.prod;
+      const pu = pulses.staging;
       if (pu && pu.v > 0) {
         ctx.beginPath();
         ctx.arc(x, y, half + 4 + (1 - pu.v) * 10, 0, Math.PI * 2);
@@ -342,54 +342,83 @@ export default function PipelineCanvas() {
         ctx.globalAlpha = 1;
       }
 
-      // chip body
       ctx.beginPath();
       ctx.roundRect(x - half, y - half, CHIP, CHIP, 5);
-      ctx.strokeStyle = celebrating ? colors.accent : colors.border;
-      ctx.lineWidth = celebrating ? 1.5 : 1;
+      ctx.strokeStyle = colors.border;
       ctx.stroke();
-      ctx.lineWidth = 1;
 
-      // pins appear when the build completes
-      if (celebrating) {
-        ctx.strokeStyle = colors.accent;
-        ctx.globalAlpha = 0.8;
-        for (let i = 0; i < 4; i++) {
-          const o = -half + 6 + i * 8;
-          ctx.beginPath();
-          ctx.moveTo(x + o, y - half);
-          ctx.lineTo(x + o, y - half - 4);
-          ctx.moveTo(x + o, y + half);
-          ctx.lineTo(x + o, y + half + 4);
-          ctx.moveTo(x - half, y + o);
-          ctx.lineTo(x - half - 4, y + o);
-          ctx.moveTo(x + half, y + o);
-          ctx.lineTo(x + half + 4, y + o);
-          ctx.stroke();
-        }
-        ctx.globalAlpha = 1;
-      }
-
-      // stacked blocks, bottom-up
       const cell = (CHIP - 8) / GRID;
-      for (let i = 0; i < fill; i++) {
+      for (let i = 0; i < chipCount; i++) {
         const row = GRID - 1 - Math.floor(i / GRID);
         const col = i % GRID;
         const bx = x - half + 4 + col * cell;
         const by = y - half + 4 + row * cell;
-        const newest = !celebrating && i === fill - 1;
+        const newest = i === chipCount - 1;
         ctx.fillStyle = colors.accent;
         ctx.globalAlpha = newest ? 1 : 0.72;
         ctx.fillRect(bx + 0.5, by + 0.5, cell - 1.5, cell - 1.5);
       }
       ctx.globalAlpha = 1;
 
-      if (celebrating) {
-        ctx.font = mono(9);
-        ctx.fillStyle = colors.accent;
-        ctx.textAlign = "center";
-        ctx.fillText(`v${celebratedVersion} shipped`, x, y - half - 10);
+      ctx.font = mono(g.w < 560 ? 9 : 10);
+      ctx.fillStyle = colors.muted;
+      ctx.textAlign = "center";
+      ctx.fillText(label, x, y + half + 14);
+    };
+
+    /** a completed batch shipping from staging to production, then fading out */
+    const drawShipAnim = (g: Geometry) => {
+      if (!shipAnim) return;
+      const t = Math.min((now - shipAnim.start) / SHIP_MS, 1);
+      const ease = 1 - Math.pow(1 - t, 3);
+      const x = g.staging.x + (g.prod.x - g.staging.x) * ease;
+      const y = g.staging.y + (g.prod.y - g.staging.y) * ease;
+      const scale = 1 - ease * 0.3;
+      const half = (CHIP * scale) / 2;
+      const alpha = t < 0.55 ? 1 : Math.max(0, 1 - (t - 0.55) / 0.45);
+
+      ctx.globalAlpha = alpha;
+      ctx.beginPath();
+      ctx.roundRect(x - half, y - half, half * 2, half * 2, 5);
+      ctx.strokeStyle = colors.accent;
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+      ctx.lineWidth = 1;
+
+      ctx.strokeStyle = colors.accent;
+      ctx.globalAlpha = alpha * 0.8;
+      for (let i = 0; i < 4; i++) {
+        const o = -half + (6 + i * 8) * scale;
+        ctx.beginPath();
+        ctx.moveTo(x + o, y - half);
+        ctx.lineTo(x + o, y - half - 4 * scale);
+        ctx.moveTo(x + o, y + half);
+        ctx.lineTo(x + o, y + half + 4 * scale);
+        ctx.moveTo(x - half, y + o);
+        ctx.lineTo(x - half - 4 * scale, y + o);
+        ctx.moveTo(x + half, y + o);
+        ctx.lineTo(x + half + 4 * scale, y + o);
+        ctx.stroke();
       }
+
+      ctx.globalAlpha = alpha;
+      const cell = (CHIP * scale - 8 * scale) / GRID;
+      for (let i = 0; i < TARGET; i++) {
+        const row = GRID - 1 - Math.floor(i / GRID);
+        const col = i % GRID;
+        const bx = x - half + 4 * scale + col * cell;
+        const by = y - half + 4 * scale + row * cell;
+        ctx.fillStyle = colors.accent;
+        ctx.fillRect(bx + 0.5, by + 0.5, cell - 1.5, cell - 1.5);
+      }
+
+      ctx.font = mono(g.w < 560 ? 9 : 10);
+      ctx.fillStyle = colors.accent;
+      ctx.textAlign = "center";
+      ctx.fillText(`v${shipAnim.version} shipped`, x, y - half - 10);
+      ctx.globalAlpha = 1;
+
+      if (t >= 1) shipAnim = null;
     };
 
     const labels = (g: Geometry) => {
@@ -410,12 +439,9 @@ export default function PipelineCanvas() {
       drawNode(g, g.plan, "plan", "plan");
       drawNode(g, g.review, "review", l.review, true);
       drawNode(g, g.cicd, "cicd", l.cicd);
-      drawNode(g, g.staging, "staging", l.staging);
-      drawChip(g);
-      ctx.font = mono(g.w < 560 ? 9 : 10);
-      ctx.fillStyle = colors.muted;
-      ctx.textAlign = "center";
-      ctx.fillText(l.prod, g.prod.x, g.prod.y + CHIP / 2 + 14);
+      drawStagingChip(g, l.staging);
+      drawNode(g, g.prod, "prod", l.prod);
+      drawShipAnim(g);
     };
 
     const drawParticle = (p: Point, alpha: number, color: string) => {
@@ -434,7 +460,7 @@ export default function PipelineCanvas() {
     const drawStatic = () => {
       if (!geometry) return;
       const g = geometry;
-      totalBuilt = 9;
+      chipCount = 9;
       drawScene(g);
       drawParticle(pointAt(g, 0, 0.3), 1, colors.muted);
       drawParticle(pointAt(g, 1, g.segments[1][2] + 0.06), 1, colors.stage1);
@@ -472,26 +498,29 @@ export default function PipelineCanvas() {
             p.t = 0;
             pulse(p.fate, colors.yellow);
             survivors.push(p);
-          } else if (p.t >= 1) {
-            totalBuilt++;
-            pulse("prod", colors.accent);
-            if (totalBuilt % TARGET === 0) {
-              celebrateUntil = ts + CELEBRATE_MS;
-              celebratedVersion = totalBuilt / TARGET;
-            }
           } else {
             const b = g.segments[p.lane];
-            // pulse intermediate gates as items pass through
-            for (const [key, bound] of [
-              ["review", b[2]],
-              ["cicd", b[3]],
-              ["staging", b[4]],
-            ] as const) {
-              if (p.t >= bound && p.t - dt / JOURNEY_MS < bound) {
-                pulse(key, colors.accent);
+            if (p.t >= b[4]) {
+              // cleared QA/staging — absorbed into the forming batch, goes no further
+              pulse("staging", colors.accent);
+              chipCount++;
+              if (chipCount >= TARGET) {
+                version++;
+                shipAnim = { start: ts, version };
+                chipCount = 0;
               }
+            } else {
+              // pulse intermediate gates as items pass through
+              for (const [key, bound] of [
+                ["review", b[2]],
+                ["cicd", b[3]],
+              ] as const) {
+                if (p.t >= bound && p.t - dt / JOURNEY_MS < bound) {
+                  pulse(key, colors.accent);
+                }
+              }
+              survivors.push(p);
             }
-            survivors.push(p);
           }
         } else {
           p.t += dt / RETURN_MS;
@@ -580,7 +609,7 @@ export default function PipelineCanvas() {
         ref={canvasRef}
         className="block h-[210px] w-full"
         role="img"
-        aria-label="Animated diagram of my delivery loop: tasks flow from a plan through parallel AI coding agents into human code review, then CI/CD and QA/staging gates, and ship to production. Rejected items return to the plan and re-enter the flow. Production stacks shipped work into a chip that completes a version, clears, and starts the next build."
+        aria-label="Animated diagram of my delivery loop: tasks flow from a plan through parallel AI coding agents into human code review, then CI/CD and QA/staging gates. Rejected items return to the plan and re-enter the flow. Items that clear QA/staging stack into a batch there; once full, the batch ships to production and fades out, then staging starts collecting the next build."
       />
     </div>
   );

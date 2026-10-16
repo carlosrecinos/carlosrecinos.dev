@@ -1,0 +1,16 @@
+{
+  "slug": "mi-claude",
+  "titulo": "Tu propio Claude con vida propia",
+  "bajada": "Una mascota de pixel art que vive en tu Claude Code: trabaja con vos, se duerme si lo dejás solo, se va a la playa y te manda postales.",
+  "fecha": "2026-10-16",
+  "herramienta": "Claude Code",
+  "etiquetas": ["Claude Code", "terminal", "pixel art"],
+  "video": "Dejé a mi Claude solo media hora… y se fue a la playa.",
+  "como_usarlo": [
+    "Abrí Claude Code en la terminal.",
+    "Copiá el prompt y pegalo tal cual.",
+    "Dejá que la construya y la pruebe (unos 20 min).",
+    "Dejalo solo media hora y esperá la postal."
+  ],
+  "probado": true
+}

@@ -5,8 +5,11 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build",
-    "preview": "vite preview",
+    "build": "tsc -b && vite build && node site/build.mjs",
+    "build:sitio": "node site/build.mjs",
+    "preview": "node site/servir.mjs",
+    "verificar": "node site/herramientas/verificar.mjs",
+    "og": "node site/herramientas/og.mjs",
     "typecheck": "tsc -b --noEmit"
   },
   "dependencies": {
@@ -21,6 +24,10 @@
     "@vitejs/plugin-react": "^4.3.4",
     "tailwindcss": "^4.1.0",
     "typescript": "^5.7.3",
-    "vite": "^6.0.7"
+    "vite": "^6.0.7",
+    "esbuild": "^0.25.12"
+  },
+  "engines": {
+    "node": ">=20"
   }
 }

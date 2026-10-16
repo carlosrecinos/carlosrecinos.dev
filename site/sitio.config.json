@@ -1,0 +1,17 @@
+{
+  "url": "https://carlosrecinos.dev",
+  "nombre": "Carlos Recinos",
+  "titulo": "Los prompts de mis videos",
+  "lema": "Construyendo software salvadoreño desde Chalate 🇸🇻",
+  "descripcion": "Los prompts de mis videos, listos para copiar y pegar en tu Claude Code. Construyendo software salvadoreño desde Chalate.",
+  "instagram": "carlos_recino",
+  "contacto": {
+    "whatsapp": {
+      "numero": "+503 6315-3522",
+      "mensaje": "Hola Carlos, vengo de tu página de prompts 👋"
+    },
+    "correo": "carlosrecinos1999@gmail.com",
+    "instagram": "carlos_recino"
+  },
+  "busqueda_desde": 9
+}

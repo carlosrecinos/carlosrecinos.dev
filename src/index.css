@@ -64,6 +64,7 @@
 html {
   scroll-behavior: smooth;
   scroll-padding-top: 5rem;
+  overflow-x: clip; /* en el teléfono, sin esto el brillo del hero ensancha la página y el navegador la aleja */
 }
 
 body {
